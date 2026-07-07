@@ -1,0 +1,6 @@
+python3 png_to_hex.py image.png input.hex // if greyscale
+python3 png_to_hex.py image.png input.hex --rgb // if rgb
+iverilog -g2012 -o scaler_sim tb_image_scaler.v image_scaler_top.v mapper.v buffer.v horizontal_interpolator.v vertical_interpolator.v input_image.v output_image.v bram.v
+vvp scaler_sim
+python3 hex_to_png.py output.hex result.png --width 960 --height 700 // greyscale
+python3 hex_to_png.py output.hex result.png --width 960 --height 700 --rgb // rgb
