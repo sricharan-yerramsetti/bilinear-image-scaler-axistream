@@ -21,7 +21,7 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 | :---: | :---: |
 | <img src="trail_run_and_results/grayscale_image_1.png" width="350" alt="Grayscale Source"> | <img src="docs/images/grayscale_output.png" width="450" alt="Grayscale Output"> |
 
-### 🎨 RGB Bilinear Scaling (335 × 272 → 335 × 272 / Resized)
+### 🎨 RGB Bilinear Scaling
 
 | Source RGB Image (Left) | Scaled RGB Output (Right) |
 | :---: | :---: |
@@ -33,4 +33,17 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 
 ## ⚙️ Hardware Pipeline Architecture
 
-The processing is split across four synchronous stages, synchronized by a master coordinate system and backward-propagated ready/valid handshake networks[cite: 9]:
+The processing is split across four synchronous stages, synchronized by a master coordinate system and backward-propagated ready/valid handshake networks:
+
+              ┌──────────────┐
+              │ s_axis_tdata │ (Incoming Pixel Stream)
+              └──────┬───────┘
+                     ▼
+ ───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐
+│  Stage 1  ├─────►│  Stage 2  ├─────►│  Stage 3  ├─────►│  Stage 4  │
+│  mapper   │      │  buffer   │      │  h_interp │      │  v_interp │
+└───────────┘      └───────────┘      └───────────┘      └─────┬─────┘
+                                                               ▼
+                                                        ┌──────────────┐
+                                                        │ m_axis_tdata │ (Scaled Output Stream)
+                                                        └──────────────┘
