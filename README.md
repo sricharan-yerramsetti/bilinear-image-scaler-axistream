@@ -128,7 +128,7 @@ python3 hex_to_png.py output.hex result.png --width 960 --height 500
 # Convert RGB output back to PNG
 python3 hex_to_png.py output.hex result.png --width 960 --height 500 --rgb
 ```
-
+---
 ## Parameterization
 
 You can adjust scale factors, image sizes, and pixel widths directly via the `localparams` block inside the testbench (`tb_image_scaler.v`):
@@ -138,5 +138,5 @@ You can adjust scale factors, image sizes, and pixel widths directly via the `lo
 *   **`DST_W` / `DST_H`**: Destination (output) image width and height.
 *   **`FRAC_BITS`**: Number of fractional bits used in the fixed-point coordinate mapper (default `8` bits).
 *   **`ADDR_BITS`**: Address bit-width for internal row and column indexing.
-
+---
 
