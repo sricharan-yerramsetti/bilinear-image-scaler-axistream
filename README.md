@@ -35,15 +35,36 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 
 The processing is split across four synchronous stages, synchronized by a master coordinate system and backward-propagated ready/valid handshake networks:
 
-              ┌──────────────┐
-              │ s_axis_tdata │ (Incoming Pixel Stream)
-              └──────┬───────┘
-                     ▼
- ───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐
-│  Stage 1  ├─────►│  Stage 2  ├─────►│  Stage 3  ├─────►│  Stage 4  │
-│  mapper   │      │  buffer   │      │  h_interp │      │  v_interp │
-└───────────┘      └───────────┘      └───────────┘      └─────┬─────┘
-                                                               ▼
-                                                        ┌──────────────┐
-                                                        │ m_axis_tdata │ (Scaled Output Stream)
-                                                        └──────────────┘
+                        ┌──────────────┐
+                        │ s_axis_tdata │ (Incoming Pixel Stream)
+                        └──────┬───────┘
+                               ▼
+         ───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐
+        │  Stage 1  ├─────►│  Stage 2  ├─────►│  Stage 3  ├─────►│  Stage 4  │
+        │  mapper   │      │  buffer   │      │  h_interp │      │  v_interp │
+        └───────────┘      └───────────┘      └───────────┘      └─────┬─────┘
+                                                                       ▼
+                                                                ┌──────────────┐
+                                                                │ m_axis_tdata │ (Scaled Output Stream)
+                                                                └──────────────┘
+
+### 1️⃣ Stage 1: Coordinate Mapper (`mapper.v`)
+Calculates where each destination pixel "lands" in the source coordinate grid[cite: 9]. Since scale factors are rarely integers, the landing spot is represented as fixed-point coordinates (default: 8 fractional bits). It tracks:
+*   The bounding source pixel coordinates ($TL, TR, BL, BR$).
+*   The fractional offsets (`frac_x`, `frac_y`) representing how close the point is to its neighbors.
+*   A modulo-3 index tag mapping the target source lines to active cache slots.
+
+### 2️⃣ Stage 2: Row Cache Buffer (`buffer.v`)
+Stores exactly three source rows inside dual-port Block RAMs (divided into even/odd column banks to fetch adjacent horizontal pixels in a single clock cycle). 
+*   **Producer/Consumer Synchronization:** The incoming AXI-Stream fills the empty slots, while Stage 1 coordinates read out the four bounding neighbors ($TL, TR, BL, BR$) simultaneously.
+*   The buffer stalls the input if the cache is full, and stalls the pipeline if the required source rows have not yet arrived.
+
+### 3️⃣ Stage 3: Horizontal Interpolator (`horizontal_interpolator.v`)
+Performs the horizontal blending step. It computes two intermediate values:
+*   The blend between Top-Left ($TL$) and Top-Right ($TR$) using `frac_x`.
+*   The blend between Bottom-Left ($BL$) and Bottom-Right ($BR$) using `frac_x`.
+
+### 4️⃣ Stage 4: Vertical Interpolator (`vertical_interpolator.v`)
+Takes the two horizontally interpolated values and performs the final vertical blend using `frac_y`. The final scaled pixel is packed and driven onto the master AXI-Stream interface along with `m_axis_tlast` signals denoting row boundaries.
+
+Every stage is parameterized by `NUM_CH` and `CH_W` to natively support both single-channel grayscale and multi-channel RGB formats.
