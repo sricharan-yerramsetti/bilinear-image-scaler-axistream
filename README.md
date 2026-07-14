@@ -82,7 +82,7 @@ Every stage is parameterized by `NUM_CH` and `CH_W` to natively support both sin
 | **`vertical_interpolator.v`** | Stage 4 — Vertical linear interpolation and output stream control. |
 | **`input_image.v`** | Simulation helper: Streams pixel blocks from `input.hex` over AXI-Stream. |
 | **`output_image.v`** | Simulation helper: Captures processing output into a flat `output.hex`. |
-| **`tb_image_scaler.v`** | Comprehensive testbench verifying handshakes, stalls, and output generation. |
+| **`testbench.v`** | Comprehensive testbench verifying handshakes, stalls, and output generation. |
 | **`png_to_hex.py`** | Python tool converting standard source PNG images into `$readmemh` format. |
 | **`hex_to_png.py`** | Python tool converting simulation-generated hex dumps back into viewable PNGs. |
 
@@ -99,7 +99,7 @@ Streaming hardware pipelines introduce complex synchronization issues. Key chall
 ---
 ## How to Run the Simulation
 
-You can compile and run this entire environment using the open-source tool **Icarus Verilog** and **Python 3**[cite: 9]. No heavy, vendor-specific IDEs required[cite: 9].
+You can compile and run this entire environment using the open-source tool **Icarus Verilog** and **Python 3**. No heavy, vendor-specific IDEs required.
 
 ### 1. Convert your source image to a hex file
 ```bash
@@ -108,4 +108,24 @@ python3 png_to_hex.py image.png input.hex
 
 # For 24-bit RGB scaling
 python3 png_to_hex.py image.png input.hex --rgb
+```
+### 2. Compile the Verilog Source
+```bash
+iverilog -g2012 -o scaler_sim tb_image_scaler.v image_scaler_top.v \
+mapper.v buffer.v horizontal_interpolator.v vertical_interpolator.v \
+input_image.v output_image.v bram.v
+```
+
+### 3. Run the Simulation
+```bash
+vvp scaler_sim
+```
+### 4. Reconstruct the Output Image
+```bash
+# Convert grayscale output back to PNG (e.g., scaled to 960x500)
+python3 hex_to_png.py output.hex result.png --width 960 --height 500
+
+# Convert RGB output back to PNG
+python3 hex_to_png.py output.hex result.png --width 960 --height 500 --rgb
+```
 
