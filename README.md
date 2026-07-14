@@ -21,13 +21,12 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 | :---: | :---: |
 | <img src="trail_run_and_results/grey_scale_image_1.png" alt="Grayscale Source"> | <img src="trail_run_and_results/grey_scale_image_1_result.png" alt="Grayscale Output"> |
 
-### 🎨 RGB Bilinear Scaling
+### RGB Bilinear Scaling
 
-| Source RGB Image (Left) | Scaled RGB Output (Right) |
+| Source RGB Image (335x272) | Scaled RGB Output (500x500) |
 | :---: | :---: |
-| <img src="docs/images/rgb_source.png" width="350" alt="RGB Source"> | <img src="docs/images/rgb_output.png" width="350" alt="RGB Output"> |
+| <img src="trail_run_and_results/rgb_image_1.png" alt="RGB Source"> | <img src="trail_run_and_results/rgb_image_1_result.png" alt="RGB Output"> |
 
-> *Note: Place your generated PNG files in a `docs/images/` directory in your repo to render these visuals on your GitHub main page.*
 
 ---
 
