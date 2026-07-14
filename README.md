@@ -31,7 +31,7 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 
 ---
 
-## ⚙️ Hardware Pipeline Architecture
+## Hardware Pipeline Architecture
 
 The processing is split across four synchronous stages, synchronized by a master coordinate system and backward-propagated ready/valid handshake networks:
 
@@ -49,7 +49,7 @@ The processing is split across four synchronous stages, synchronized by a master
                                                                 └──────────────┘
 
 ### 1️⃣ Stage 1: Coordinate Mapper (`mapper.v`)
-Calculates where each destination pixel "lands" in the source coordinate grid[cite: 9]. Since scale factors are rarely integers, the landing spot is represented as fixed-point coordinates (default: 8 fractional bits). It tracks:
+Calculates where each destination pixel "lands" in the source coordinate grid. Since scale factors are rarely integers, the landing spot is represented as fixed-point coordinates (default: 8 fractional bits). It tracks:
 *   The bounding source pixel coordinates ($TL, TR, BL, BR$).
 *   The fractional offsets (`frac_x`, `frac_y`) representing how close the point is to its neighbors.
 *   A modulo-3 index tag mapping the target source lines to active cache slots.
@@ -68,3 +68,44 @@ Performs the horizontal blending step. It computes two intermediate values:
 Takes the two horizontally interpolated values and performs the final vertical blend using `frac_y`. The final scaled pixel is packed and driven onto the master AXI-Stream interface along with `m_axis_tlast` signals denoting row boundaries.
 
 Every stage is parameterized by `NUM_CH` and `CH_W` to natively support both single-channel grayscale and multi-channel RGB formats.
+---
+
+## Repository Structure
+
+| File Name | Purpose |
+| :--- | :--- |
+| **`image_scaler_top.v`** | Top-level module; instantiates and wires together the 4 processing stages. |
+| **`mapper.v`** | Stage 1 — Bilinear coordinate mapping engine and fractional weight generator. |
+| **`buffer.v`** | Stage 2 — Rolling 3-row cache buffer managing BRAM read/write domains. |
+| **`bram.v`** | Memory primitive representing the dual-port RAMs inside the row buffers. |
+| **`horizontal_interpolator.v`**| Stage 3 — Horizontal linear interpolation pipeline. |
+| **`vertical_interpolator.v`** | Stage 4 — Vertical linear interpolation and output stream control. |
+| **`input_image.v`** | Simulation helper: Streams pixel blocks from `input.hex` over AXI-Stream. |
+| **`output_image.v`** | Simulation helper: Captures processing output into a flat `output.hex`. |
+| **`tb_image_scaler.v`** | Comprehensive testbench verifying handshakes, stalls, and output generation. |
+| **`png_to_hex.py`** | Python tool converting standard source PNG images into `$readmemh` format. |
+| **`hex_to_png.py`** | Python tool converting simulation-generated hex dumps back into viewable PNGs. |
+
+---
+---
+
+## Verification & Challenges Overcome
+
+Streaming hardware pipelines introduce complex synchronization issues. Key challenges solved during development include:
+1.  **Mod-3 Cache Desync on Non-Integer Scaling:** Early designs updated modulo-3 trackers incrementally. On downscaling (where source rows are skipped), this caused immediate desynchronization. The fix computes the mod-3 index directly from the destination's absolute source row target on every clock cycle.
+2.  **Row-Boundary Drift:** Replaced relative bit-slicing address trackers with an explicit column counter to ensure robust row boundary detection for images with non-power-of-two widths (e.g., 480 or 451 pixels).
+3.  **Dropped End-Of-Frame Pixel:** Fixed a race condition where double writes to the validation logic at the end of a frame caused the last pixel to drop.
+
+---
+## How to Run the Simulation
+
+You can compile and run this entire environment using the open-source tool **Icarus Verilog** and **Python 3**[cite: 9]. No heavy, vendor-specific IDEs required[cite: 9].
+
+### 1. Convert your source image to a hex file
+```bash
+# For Grayscale scaling
+python3 png_to_hex.py image.png input.hex
+
+# For 24-bit RGB scaling
+python3 png_to_hex.py image.png input.hex --rgb
+
