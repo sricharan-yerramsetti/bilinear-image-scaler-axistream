@@ -1,25 +1,24 @@
 module stage4 #(
-    parameter NUM_CH    = 1,
-    parameter CH_W      = 8,
+    parameter NUM_CH = 1,
+    parameter CH_W = 8,
     parameter FRAC_BITS = 8,
-    parameter DST_W     = 1280,
-    parameter DST_H     = 720,
+    parameter DST_W = 1280,
+    parameter DST_H = 720,
     parameter ADDR_BITS = 11
 )(
-    input  clk,
-    input  rst,
+    input clk,
+    input rst,
+    input s3_valid,
+    input [NUM_CH*CH_W-1:0] top_interp,
+    input [NUM_CH*CH_W-1:0] bot_interp,
+    input [FRAC_BITS-1:0] s3_frac_y,
 
-    input                        s3_valid,
-    input  [NUM_CH*CH_W-1:0]     top_interp,
-    input  [NUM_CH*CH_W-1:0]     bot_interp,
-    input  [FRAC_BITS-1:0]       s3_frac_y,
-
-    output                       s3_ready,
+    output s3_ready,
 
     output reg [NUM_CH*CH_W-1:0] m_axis_tdata,
-    output reg                   m_axis_tvalid,
-    input                        m_axis_tready,
-    output reg                   m_axis_tlast
+    output reg m_axis_tvalid,
+    input m_axis_tready,
+    output reg m_axis_tlast
 );
 
 reg [ADDR_BITS-1:0] x_cnt;
@@ -43,15 +42,7 @@ begin : VERT_CH
 end
 endgenerate
 
-///////////////////////////////////////////////////////////////
-// Proper backpressure
-///////////////////////////////////////////////////////////////
-
 assign s3_ready = (!m_axis_tvalid) ||  m_axis_tready;
-
-///////////////////////////////////////////////////////////////
-// Output register
-///////////////////////////////////////////////////////////////
 
 always @(posedge clk)
 begin
