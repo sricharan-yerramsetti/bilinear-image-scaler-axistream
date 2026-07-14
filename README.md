@@ -23,7 +23,7 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 
 ### RGB Bilinear Scaling
 
-| Source RGB Image (335x272) | Scaled RGB Output (500x500) |
+| Source RGB Image (335x272) | Scaled RGB Output (450x450) |
 | :---: | :---: |
 | <img src="trail_run_and_results/rgb_image_1.png" alt="RGB Source"> | <img src="trail_run_and_results/rgb_image_1_result.png" alt="RGB Output"> |
 
