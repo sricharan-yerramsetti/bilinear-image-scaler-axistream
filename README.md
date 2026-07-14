@@ -19,7 +19,7 @@ Here is how the pipeline performs on both single-channel grayscale and multi-cha
 
 | Source Image (480x451) | Scaled Pipeline Output (200x400) |
 | :---: | :---: |
-| <img src="trail_run_and_results/grey_scale_image_1.png" width="350" alt="Grayscale Source"> | <img src="trail_run_and_results/grey_scale_image_1_result.png" width="450" alt="Grayscale Output"> |
+| <img src="trail_run_and_results/grey_scale_image_1.png" alt="Grayscale Source"> | <img src="trail_run_and_results/grey_scale_image_1_result.png" alt="Grayscale Output"> |
 
 ### 🎨 RGB Bilinear Scaling
 
